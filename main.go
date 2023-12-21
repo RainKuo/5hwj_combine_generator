@@ -70,12 +70,16 @@ func GenerateCombines() {
 	defer writer.Flush()
 	existed = make(map[string]int)
 	idBegin := 10000
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 30000; i++ {
 		succ, ctn := generator.DoGenerate()
+		if ctn.GetTotalCount() != 54 {
+			succ = false
+		}
 		if succ {
 			OnSave(ctn, writer, idBegin+i)
 		}
 	}
+	// generator.GenerateTest()
 	writer.Flush()
 }
 

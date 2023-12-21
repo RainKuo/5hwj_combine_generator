@@ -22,6 +22,10 @@ type HandCard struct {
 	SingleCount   int
 }
 
+func (hc *HandCard) GetTotal() int {
+	return hc.BombCount*4 + hc.KingBombCount*2 + hc.TripleCount*3 + hc.PairsCount*2 + hc.SingleCount
+}
+
 // 基本牌型枚举
 const CombineTypeNone = 0
 const CombineTypeTriple = 1   // 三张

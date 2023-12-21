@@ -63,6 +63,11 @@ func (c *Container) ValToStrList() []string {
 	return str
 }
 
+func (c *Container) GetTotalCount() int {
+	sum := c.CardStat.GetTotal() + c.RemainCards.GetTotal()
+	return sum
+}
+
 func (c *Container) CalcRemainCT() {
 	for _, ct := range c.CardCombines {
 		switch ct {
@@ -142,33 +147,44 @@ func (g *Generator) GeneratePlayer1(ctn *Container, configID uint32) bool {
 		}
 	}
 	// 对子
+	pairsMap := make(map[int]int)
 	for i := 0; i < int(conf.Pair); i++ {
 		exist, idx := ctn.HasCombineType(CombineTypePair)
-		if !exist {
-			exist, idx = ctn.HasCombineType(CombineTypeBomb)
+		if _, find := pairsMap[idx]; find {
+			exist = false
 		}
-		if exist {
-			ctn.Cards[idx] -= 2
-			ctn.SetCombineType(idx)
-			ctn.CardStat.PairsCount++
-		}
-	}
-
-	for i := 0; i < int(conf.Single); i++ {
-		exist, idx := ctn.HasCombineType(CombineTypeSingle)
 		if !exist {
 			exist, idx = ctn.HasCombineType(CombineTypeBomb)
 		}
 		if !exist {
 			exist, idx = ctn.HasCombineType(CombineTypeTriple)
 		}
+		if exist {
+			ctn.Cards[idx] -= 2
+			ctn.SetCombineType(idx)
+			ctn.CardStat.PairsCount++
+		} else {
+			return false
+		}
+	}
+
+	singleMap := make(map[int]int)
+	for i := 0; i < int(conf.Single); i++ {
+		exist, idx := ctn.HasCombineType(CombineTypeSingle)
+		if _, find := singleMap[idx]; find {
+			exist = false
+		}
+		if !exist {
+			exist, idx = ctn.HasCombineType(CombineTypeBomb)
+		}
+		if !exist {
+			exist, idx = ctn.HasCombineType(CombineTypeTriple)
+		}
+		if _, find := singleMap[idx]; find {
+			exist = false
+		}
 		if !exist {
 			exist, idx = ctn.HasCombineType(CombineTypePair)
-		}
-		if exist {
-			ctn.Cards[idx] -= 1
-			ctn.SetCombineType(idx)
-			ctn.CardStat.SingleCount++
 		}
 	}
 	return true
@@ -210,8 +226,12 @@ func (g *Generator) GenerateOne(ctn *Container, configID uint32) bool {
 		}
 	}
 	// 对子
+	pairsMap := make(map[int]int)
 	for i := 0; i < int(conf.Pair); i++ {
 		exist, idx := ctn.HasCombineType(CombineTypePair)
+		if _, find := pairsMap[idx]; find {
+			exist = false
+		}
 		if !exist {
 			exist, idx = ctn.HasCombineType(CombineTypeBomb)
 		}
@@ -227,19 +247,23 @@ func (g *Generator) GenerateOne(ctn *Container, configID uint32) bool {
 		}
 	}
 	// 单张
+	singleMap := make(map[int]int)
 	for i := 0; i < int(conf.Single); i++ {
 		exist, idx := ctn.HasCombineType(CombineTypeSingle)
+		if _, find := singleMap[idx]; find {
+			exist = false
+		}
 		if !exist {
 			exist, idx = ctn.HasCombineType(CombineTypeBomb)
 		}
 		if !exist {
 			exist, idx = ctn.HasCombineType(CombineTypeTriple)
 		}
-		if !exist {
-			exist, idx = ctn.HasCombineType(CombineTypePair)
+		if _, find := singleMap[idx]; find {
+			exist = false
 		}
 		if !exist {
-			exist, idx = ctn.HasCombineType(CombineTypeKingBomb)
+			exist, idx = ctn.HasCombineType(CombineTypePair)
 		}
 		if exist {
 			ctn.Cards[idx] -= 1
@@ -283,6 +307,15 @@ func (g *Generator) GenerateOther(ctn *Container, configID *uint32) bool {
 		}
 	}
 	return false
+}
+
+func (g *Generator) GenerateTest() {
+	ctn := NewContainer()
+	copy(ctn.Cards, g.Cards)
+	copy(ctn.CardCombines, g.CardCombines)
+	g.GeneratePlayer1(ctn, 1014)
+	g.GenerateOne(ctn, 1001)
+	g.GenerateOne(ctn, 1005)
 }
 
 func (g *Generator) DoGenerate() (bool, *Container) {
