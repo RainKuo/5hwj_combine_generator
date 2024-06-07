@@ -15,6 +15,7 @@ type CombineConfig struct {
 	Pair     uint32 `json:"Pair"`
 	Single   uint32 `json:"Single"`
 	EventID  string `json:"EventID"`
+	Weight   uint32 `json:"Weight"`
 }
 
 type CombineConfigs struct {
@@ -88,8 +89,8 @@ func NewCombineConfigs() *CombineConfigs {
 	}
 }
 
-func (cc *CombineConfigs) Init() {
-	ParseConfig("./res/config/config_BaseCombine.json", &cc.ConfigList)
+func (cc *CombineConfigs) Init(path string) {
+	ParseConfig(path /*"./res/config/config_BaseCombine.json"*/, &cc.ConfigList)
 	for _, config := range cc.ConfigList {
 		cc.ConfigIDMap[config.ID] = config
 		if config.Triple > 0 {

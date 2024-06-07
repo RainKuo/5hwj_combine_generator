@@ -20,7 +20,7 @@ func ExcelToJson(path string) {
 		rows, _ := xlxs.GetRows(sheetName)
 		fields := rows[0]
 		fieldTypes := rows[2]
-		dataList := rows[4:]
+		dataList := rows[7:]
 		for _, cols := range dataList {
 
 			data := make(map[string]interface{})

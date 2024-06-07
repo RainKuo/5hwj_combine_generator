@@ -89,12 +89,12 @@ func (c *Container) SetEventID(cc *CombineConfigs) {
 	c.EventID2nd = cc.GetConfigByID(c.ConfigID2nd).EventID
 	c.EventID3rd = cc.GetConfigByID(c.ConfigID3rd).EventID
 }
-func NewGenerator() *Generator {
+func NewGenerator(path string) *Generator {
 	generator := &Generator{
 		Cards:   make([]int, 14),
 		Configs: NewCombineConfigs(),
 	}
-	generator.Configs.Init()
+	generator.Configs.Init(path)
 	generator.Reset()
 	return generator
 }
@@ -185,6 +185,11 @@ func (g *Generator) GeneratePlayer1(ctn *Container, configID uint32) bool {
 		}
 		if !exist {
 			exist, idx = ctn.HasCombineType(CombineTypePair)
+		}
+		if exist {
+			ctn.Cards[idx] -= 1
+			ctn.SetCombineType(idx)
+			ctn.CardStat.SingleCount++
 		}
 	}
 	return true

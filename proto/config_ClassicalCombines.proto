@@ -1,0 +1,30 @@
+syntax = "proto3";
+package ClassicalCombines.pb;
+option go_package = "proto/out/classical_combine";
+message classical_combine_config{
+	uint32 ID = 1;//配置id
+	uint32 ControlFlag = 2;//身份控制
+	uint32 RivalType = 3;//炸弹类型
+	uint64 Combine0 = 4;//0号
+	uint64 Combine1 = 5;//1号
+	uint64 Combine2 = 6;//2号
+	uint32 RemainBigCount = 7;//剩余大牌数量
+}
+message classical_base_combine{
+	uint32 BigCount = 1;//大牌数
+	uint32 BombCount = 2;//炸弹数
+	uint32 TripleCount = 3;//三张数
+	uint32 PairCount = 4;//对子数
+	uint32 SingleCount = 5;//单张数
+}
+message Config{
+	repeated classical_combine_config configs = 1;//牌库配置
+	repeated classical_base_combine base_configs = 2;//基础牌型
+}
+enum RivalType{
+	NORMAL_RIVAL_ = 0;// 常见有对抗
+	NORMAL_NO_RIVAL_ = 1;//常见无对抗
+	RARE_RIVAL_=2;//稀有有对抗
+	RARE_NO_RIVAL_=3;//稀有无对抗
+}
+
