@@ -5,6 +5,7 @@ import (
 	"CombineGenerator/combine_generator"
 	"CombineGenerator/db"
 	"CombineGenerator/proto/out/classical_combine"
+	"CombineGenerator/tower_combine_generator"
 	"CombineGenerator/utils"
 	"encoding/csv"
 	"fmt"
@@ -23,10 +24,9 @@ const (
 )
 
 const (
-	BUXIPAI_BOMB_1 = 1 // 3个ID只有1-2炸
-	BUXIPAI_BOMB_0 = 2 // 有ID有0炸
-	BUXIPAI_BOMB_3 = 3 // 有ID有3炸
-	BUXIPAI_OTHER  = 4 // 其他类型
+	BUXIPAI_BOMB_0 = 0 // 所有玩家只有0炸/1炸的牌
+	BUXIPAI_BOMB_2 = 2 // 单个玩家最多只有2炸的牌
+	BUXIPAI_OTHER  = 3 // 其他类型
 )
 
 func SaveDB(md *db.MysqlDriver, rd *db.RedisDriver, ctn *combine_generator.Container, wg *sync.WaitGroup, mtx *sync.Mutex, writer *csv.Writer, configID *int) {
@@ -157,34 +157,32 @@ func GenerateBuxipaiCombines() {
 			}
 			if succ {
 				ids := []uint32{ctn.ConfigID1st, ctn.ConfigID2nd, ctn.ConfigID3rd}
-				bomb12 := true
-				bomb0 := false
-				bomb3 := false
+				bomb2 := false
+				bomb01 := true
+				other := false
+				// bomb3 := false
+				var bombs uint32 = 0
+
 				for _, id := range ids {
 					conf := generator.Configs.ConfigIDMap[id]
-					if conf.Bomb == 0 {
-						bomb0 = true
-						bomb12 = false
-					} else if conf.Bomb >= 1 && conf.Bomb <= 2 {
-						// bomb12 = true
-					} else if conf.Bomb == 3 {
-						bomb3 = true
-						bomb12 = false
+					if conf.Bomb == 0 || conf.Bomb == 1 {
+						// bomb01 = true
+					} else if conf.Bomb <= 2 && !other {
+						bomb2 = true
+						bomb01 = false
 					} else {
-						bomb12 = false
+						other = true
+						bomb01 = false
+						bomb2 = false
 					}
+					bombs += conf.Bomb
 				}
 
-				if bomb12 {
-					OnSave(ctn, writer, idBegin+i, BUXIPAI_BOMB_1, controlFlag)
-				}
-				if bomb0 {
+				if bomb01 {
 					OnSave(ctn, writer, idBegin+i, BUXIPAI_BOMB_0, controlFlag)
-				}
-				if bomb3 {
-					OnSave(ctn, writer, idBegin+i, BUXIPAI_BOMB_3, controlFlag)
-				}
-				if !bomb12 && !bomb0 && !bomb3 {
+				} else if bomb2 {
+					OnSave(ctn, writer, idBegin+i, BUXIPAI_BOMB_2, controlFlag)
+				} else {
 					OnSave(ctn, writer, idBegin+i, BUXIPAI_OTHER, controlFlag)
 				}
 			}
@@ -259,9 +257,11 @@ func toAlphaString(i int) string {
 }
 
 func main() {
-	//GenerateSeqbombCombines()
-	//GenerateBuxipaiCombines()
+	// GenerateSeqbombCombines()
+	// GenerateBuxipaiCombines()
 	// GenerateClassicalCombines()
 	// babao_combine_generator.CombineTableGenerate()
-	GenerateClassicalCombines()
+	// GenerateClassicalCombines()
+	// qx_combine_generator.CombineTableGenerate()
+	tower_combine_generator.CombineTableGenerate()
 }

@@ -191,15 +191,16 @@ func GetRivalType(baseCombines []BaseCombine) int {
 			tripleCount++
 		}
 	}
-	if pairSequenceCount >= 2 || singleSequenceCount >= 2 || tripleCount >= 3 {
-		baseRivalType = NORMAL_RIVAL
-		if baseCombines[0].BigCount >= 5 {
-			baseRivalType = RARE_RIVAL
-		}
+	if (pairSequenceCount >= 2 || singleSequenceCount >= 2 || tripleCount >= 3) && baseCombines[0].BigCount >= 5 {
+		baseRivalType = RARE_RIVAL
 	} else if bombCount >= 2 || twoTripleCount >= 2 {
 		baseRivalType = RARE_RIVAL
+	} else if pairSequenceCount >= 2 || singleSequenceCount >= 2 || tripleCount >= 3 {
+		baseRivalType = NORMAL_RIVAL
 	} else if baseCombines[0].BigCount >= 5 {
 		baseRivalType = RATE_NO_RIVAL
+	} else {
+		baseRivalType = NORMAL_NO_RIVAL
 	}
 	return baseRivalType
 }
