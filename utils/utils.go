@@ -1,6 +1,6 @@
 package utils
 
-import "strconv"
+import "math/rand"
 
 func RemoveSliceItem(ids []uint32, id uint32) {
 	var newIds []uint32
@@ -15,12 +15,10 @@ func RemoveSliceItem(ids []uint32, id uint32) {
 	}
 }
 
-func ToHex(arr []int) []string {
-	hexSlice := make([]string, len(arr))
-	for i, num := range arr {
-		// 使用strconv包将整数转换为16进制字符串，不带前缀0x
-		hexStr := strconv.FormatInt(int64(num), 16)
-		hexSlice[i] = hexStr
+// RandInt [min, max) 左闭右开区间
+func RandInt(min int, max int) int {
+	if max-min == 0 {
+		return min
 	}
-	return hexSlice
+	return rand.Intn(max-min) + min
 }

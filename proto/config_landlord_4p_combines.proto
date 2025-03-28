@@ -1,0 +1,16 @@
+syntax = "proto3";
+package landlord_4p_combines.pb;
+option go_package = "server/proto/landlord_4p_combines";
+message landlord_4p_combine_config{
+	uint32 ID = 1;//牌库id
+	repeated uint32 Player1HandCards = 2;//玩家1手牌
+	repeated uint32 Player2HandCards = 3;//玩家2手牌
+	repeated uint32 Player3HandCards = 4;//玩家3手牌
+	repeated uint32  Player4HandCards = 5;//玩家4手牌
+	repeated uint32 BombMultis = 6;//炸弹倍数和
+	repeated uint32 Turns = 7;//手数
+	repeated uint32 Scores = 8;//得分
+}
+message Config{
+	repeated landlord_4p_combine_config configs = 1;//牌库配置
+}

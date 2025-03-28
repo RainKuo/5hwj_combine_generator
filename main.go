@@ -4,9 +4,16 @@ import (
 	"CombineGenerator/classical_combine_generator"
 	"CombineGenerator/combine_generator"
 	"CombineGenerator/db"
+	"CombineGenerator/landlord_4_combine_generator"
 	"CombineGenerator/proto/out/classical_combine"
+<<<<<<< HEAD
+=======
+	"CombineGenerator/proto/out/landlord_4p_combines"
+>>>>>>> 8245a9e27f6b100ede62a37303f1b1e77ac77d9e
 	"CombineGenerator/utils"
+	"crypto/sha256"
 	"encoding/csv"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strconv"
@@ -251,6 +258,60 @@ func OnSaveClassicalCombine(id int, controlFlag int, combines []classical_combin
 
 }
 
+func IntsToString(ints []uint32) string {
+	strArr := make([]string, len(ints))
+	for i := 0; i < len(ints); i++ {
+		strArr[i] = strconv.Itoa(int(ints[i]))
+	}
+	return strings.Join(strArr, ",")
+}
+
+func OnSaveLandlord4Combines(id int, writer *csv.Writer, cfg *landlord_4p_combines.Landlord_4PCombineConfig) {
+	var row []string
+	row = append(row, strconv.Itoa(id), IntsToString(cfg.Player1HandCards), IntsToString(cfg.Player2HandCards), IntsToString(cfg.Player3HandCards), IntsToString(cfg.Player4HandCards),
+		IntsToString(cfg.BombMultis), IntsToString(cfg.Turns), IntsToString(cfg.Scores))
+	_ = writer.Write(row)
+}
+
+func GenerateLandlord4pCombines() {
+	landlord4Configs := &landlord_4p_combines.Config{}
+	landlord_4_combine_generator.Init()
+	landlord_4_combine_generator.Landlord4CombineGenerate()
+	distFile, _ := os.Create("landlord4Combines.csv")
+	writer := csv.NewWriter(distFile)
+	defer writer.Flush()
+
+	existed = make(map[string]int)
+	id := 1000001
+	for id < 1100000 {
+		cg4 := landlord_4_combine_generator.Landlord4CombineGenerate()
+		if cg4 == nil {
+			continue
+		}
+		if cg4.IsValid() {
+			cfg := &landlord_4p_combines.Landlord_4PCombineConfig{}
+			cg4.FillProto(cfg)
+			marshaled, _ := proto.Marshal(cfg)
+			hash := sha256.New()
+			hash.Write(marshaled)
+			hashBytes := hash.Sum(nil)
+			hashString := hex.EncodeToString(hashBytes)
+			if _, ok := existed[hashString]; !ok {
+				existed[hashString] = 1
+				landlord4Configs.Configs = append(landlord4Configs.Configs, cfg)
+				OnSaveLandlord4Combines(id, writer, cfg)
+				id++
+			}
+
+		}
+	}
+	binaryFile, _ := os.Create("landlord4_combines.bin")
+	marshal, _ := proto.Marshal(landlord4Configs)
+
+	_, _ = binaryFile.Write(marshal)
+	fmt.Println("Valid config count: ", len(landlord4Configs.Configs))
+}
+
 func GenerateClassicalCombines() {
 	classicalConfigs := &classical_combine.Config{}
 	distFile, _ := os.Create("classicalCombines.csv")
@@ -291,4 +352,6 @@ func main() {
 	// qx_combine_generator.CombineTableGenerate()
 	//tower_combine_generator.CombineTableGenerate()
 	// test_settings_generator.TestSettingsGenerate()
+	// tower_combine_generator.CombineTableGenerate()
+	// GenerateLandlord4pCombines()
 }
