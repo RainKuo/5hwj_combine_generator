@@ -1,6 +1,9 @@
 package combine_generator
 
-import "strconv"
+import (
+	"sort"
+	"strconv"
+)
 
 type HandCardStat struct {
 	ConfigID1st   int // 玩家1配置id
@@ -73,4 +76,40 @@ func (hc *HandCard) ToString() string {
 	str = str + strconv.Itoa(hc.PairsCount) + ","
 	str = str + strconv.Itoa(hc.SingleCount)
 	return str
+}
+
+// 牌库强度
+type GroupIntensity []float64
+
+func (g GroupIntensity) Sort() {
+	sort.Float64s(g)
+}
+func (g GroupIntensity) ToString() string {
+	var str string
+	len := len(g)
+	for i, v := range g {
+		ty := g.getIntensityType(v)
+		if i == len-1 {
+			str = str + strconv.Itoa(ty)
+		} else {
+			str = str + strconv.Itoa(ty) + ","
+		}
+	}
+	return str
+}
+func (g GroupIntensity) getIntensityType(intensity float64) int {
+	var result int = 0
+	if intensity >= 0 && intensity <= 0.5 {
+		result = 1
+	} else if intensity > 0.5 && intensity <= 0.66 {
+		result = 2
+	} else if intensity > 0.66 && intensity <= 0.75 {
+		result = 3
+	} else if intensity > 0.75 && intensity <= 0.8 {
+		result = 4
+	} else if intensity > 0.8 && intensity <= 1 {
+		result = 5
+	}
+
+	return result
 }

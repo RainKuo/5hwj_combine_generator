@@ -21,14 +21,14 @@ func ExcelToJson(path string) {
 		fields := rows[0]
 		fieldTypes := rows[2]
 		dataList := rows[7:]
-		for _, cols := range dataList {
 
+		for _, cols := range dataList {
 			data := make(map[string]interface{})
 			for i := 0; i < len(fields); i++ {
 				key := fields[i]
 				val := cols[i]
 				fieldType := fieldTypes[i]
-				if key == "string" && val == "0" {
+				if fieldType == "string" && val == "0" {
 					val = ""
 				}
 				switch fieldType {
@@ -40,8 +40,8 @@ func ExcelToJson(path string) {
 				default:
 					data[key] = val
 				}
-
 			}
+
 			allData = append(allData, data)
 		}
 

@@ -8,14 +8,15 @@ import (
 )
 
 type CombineConfig struct {
-	ID       uint32 `json:"ID"`
-	Bomb     uint32 `json:"Bomb"`
-	KingBomb uint32 `json:"KingBomb"`
-	Triple   uint32 `json:"Triple"`
-	Pair     uint32 `json:"Pair"`
-	Single   uint32 `json:"Single"`
-	EventID  string `json:"EventID"`
-	Weight   uint32 `json:"Weight"`
+	ID        uint32  `json:"ID"`
+	Bomb      uint32  `json:"Bomb"`
+	KingBomb  uint32  `json:"KingBomb"`
+	Triple    uint32  `json:"Triple"`
+	Pair      uint32  `json:"Pair"`
+	Single    uint32  `json:"Single"`
+	EventID   string  `json:"EventID"`
+	Weight    uint32  `json:"Weight"`
+	Intensity float64 // 补充字段：强度
 }
 
 type CombineConfigs struct {
@@ -91,6 +92,12 @@ func NewCombineConfigs() *CombineConfigs {
 
 func (cc *CombineConfigs) Init(path string) {
 	ParseConfig(path /*"./res/config/config_BaseCombine.json"*/, &cc.ConfigList)
+	// 计算每个牌型的强度，强度 = 炸弹总数/(手数-1)
+	for i := 0; i < len(cc.ConfigList); i++ {
+		config := &cc.ConfigList[i]
+		totalCb := config.Bomb + config.KingBomb + config.Triple + config.Pair + config.Single
+		config.Intensity = float64(config.Bomb+config.KingBomb) / float64(totalCb-1)
+	}
 	for _, config := range cc.ConfigList {
 		cc.ConfigIDMap[config.ID] = config
 		if config.Triple > 0 {

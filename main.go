@@ -5,15 +5,15 @@ import (
 	"CombineGenerator/combine_generator"
 	"CombineGenerator/db"
 	"CombineGenerator/proto/out/classical_combine"
-	"CombineGenerator/tower_combine_generator"
 	"CombineGenerator/utils"
 	"encoding/csv"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -75,13 +75,31 @@ func OnSave(ctn *combine_generator.Container, writer *csv.Writer, configID int, 
 	}
 }
 
+func OnSaveSeqbombCombines(ctn *combine_generator.Container, writer *csv.Writer, configID int, bombType int, controlFlag int, group_intensity *combine_generator.GroupIntensity) {
+	str := []string{strconv.Itoa(int(ctn.ConfigID1st)), strconv.Itoa(int(ctn.ConfigID2nd)),
+		strconv.Itoa(int(ctn.ConfigID3rd))}
+	exKey := strings.Join(str, "")
+	if _, ok := existed[exKey]; !ok {
+		var row []string
+		row = append(row, strconv.Itoa(configID), strconv.Itoa(controlFlag), strconv.Itoa(bombType), strconv.Itoa(int(ctn.ConfigID1st)), strconv.Itoa(int(ctn.ConfigID2nd)),
+			strconv.Itoa(int(ctn.ConfigID3rd)), ctn.RemainCards.ToString(), strconv.Itoa(ctn.CardStat.BombCount),
+			strconv.Itoa(ctn.CardStat.KingBombCount), strconv.Itoa(ctn.CardStat.TripleCount),
+			strconv.Itoa(ctn.CardStat.PairsCount), strconv.Itoa(ctn.CardStat.SingleCount),
+			ctn.EventID1st, ctn.EventID2nd, ctn.EventID3rd,
+			group_intensity.ToString())
+		err := writer.Write(row)
+		existed[exKey] = 1
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
 func GenerateSeqbombCombines() {
 	utils.ExcelToJson("excel/连炸基础牌型.xlsx")
 
-	rd := &db.RedisDriver{}
-	rd.ConnectRedis()
 	generator := combine_generator.NewGenerator("./res/config/config_seqbomb_base_combines.json")
-	distFile, _ := os.Create("seqbombCombines.csv")
+	distFile, _ := os.Create("seqbombCombines_tmp.csv")
 
 	writer := csv.NewWriter(distFile)
 	defer writer.Flush()
@@ -97,6 +115,14 @@ func GenerateSeqbombCombines() {
 				succ = false
 			}
 			if succ {
+				// 整合牌组的强度
+				group_intensity := combine_generator.GroupIntensity{
+					generator.Configs.ConfigIDMap[ctn.ConfigID1st].Intensity,
+					generator.Configs.ConfigIDMap[ctn.ConfigID2nd].Intensity,
+					generator.Configs.ConfigIDMap[ctn.ConfigID3rd].Intensity,
+				}
+				group_intensity.Sort()
+
 				ids := []uint32{ctn.ConfigID1st, ctn.ConfigID2nd, ctn.ConfigID3rd}
 				bomb1 := false
 				bomb23 := true
@@ -115,16 +141,16 @@ func GenerateSeqbombCombines() {
 				}
 
 				if bomb1 {
-					OnSave(ctn, writer, idBegin+i, SEQBOMB_BOMB_1, controlFlag)
+					OnSaveSeqbombCombines(ctn, writer, idBegin+i, SEQBOMB_BOMB_1, controlFlag, &group_intensity)
 				}
 				if bomb23 {
-					OnSave(ctn, writer, idBegin+i, SEQBOMB_BOMB_2_3, controlFlag)
+					OnSaveSeqbombCombines(ctn, writer, idBegin+i, SEQBOMB_BOMB_2_3, controlFlag, &group_intensity)
 				}
 				if bomb4 {
-					OnSave(ctn, writer, idBegin+i, SEQBOMB_BOMB_4, controlFlag)
+					OnSaveSeqbombCombines(ctn, writer, idBegin+i, SEQBOMB_BOMB_4, controlFlag, &group_intensity)
 				}
 				if !bomb1 && !bomb23 && !bomb4 {
-					OnSave(ctn, writer, idBegin+i, SEQBOMB_BOMB_NONE, controlFlag)
+					OnSaveSeqbombCombines(ctn, writer, idBegin+i, SEQBOMB_BOMB_NONE, controlFlag, &group_intensity)
 				}
 			}
 		}
@@ -257,11 +283,12 @@ func toAlphaString(i int) string {
 }
 
 func main() {
-	// GenerateSeqbombCombines()
+	GenerateSeqbombCombines()
 	// GenerateBuxipaiCombines()
 	// GenerateClassicalCombines()
 	// babao_combine_generator.CombineTableGenerate()
 	// GenerateClassicalCombines()
 	// qx_combine_generator.CombineTableGenerate()
-	tower_combine_generator.CombineTableGenerate()
+	//tower_combine_generator.CombineTableGenerate()
+	// test_settings_generator.TestSettingsGenerate()
 }
